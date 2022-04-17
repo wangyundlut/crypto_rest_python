@@ -40,9 +40,15 @@ class okx_api_v5(Client):
             params['after'] = after
         return self._request_with_params(GET, '/api/v5/account/bills', params) 
 
-    def account_get_bills_archive(self, before='', after=''):
+    def account_get_bills_archive(self, before='', after='', instType='', ccy='', type_=''):
         # before 填入billId 获取更新的数据
         params = {}
+        if instType:
+            params['instType'] = instType
+        if ccy:
+            params['ccy'] = ccy
+        if type_:
+            params["type"] = type_
         if before:
             params['before'] = before
         if after:
@@ -179,7 +185,7 @@ class okx_api_v5(Client):
         if ordId:
             params['ordId'] = ordId
         if clOrdId:
-            params['clOrdId'] = ordId
+            params['clOrdId'] = clOrdId
         return self._request_with_params(POST, '/api/v5/trade/cancel-order', params)
 
     def trade_post_cancel_batch_orders(self, params: list):
