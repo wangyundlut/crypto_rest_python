@@ -29,7 +29,7 @@ class Client(object):
         return session
 
     def _generate_signature(self, data):
-
+        # 生成签名必须有排序
         ordered_data = self._order_params(data)
         query_string = '&'.join(["{}={}".format(d[0], d[1]) for d in ordered_data])
         m = hmac.new(self.API_SECRET.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
@@ -107,9 +107,11 @@ class Client(object):
         response.
         """
         if not str(self.response.status_code).startswith('2'):
+            return self.response.json()
             raise BinanceAPIException(self.response)
         try:
             return self.response.json()
         except ValueError:
+            return self.response.json()
             raise BinanceRequestException('Invalid Response: %s' % self.response.text)
     

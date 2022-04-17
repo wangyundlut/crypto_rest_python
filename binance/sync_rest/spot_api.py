@@ -81,6 +81,34 @@ class SpotAPI(Client):
         params = {}
         return self._request_api("get", "/api/v3/account", True, data=params)
 
+    def spot_post_order(self, symbol, side, type_, timeInForce=None, quantity=None, quoteOrderQty=None, price=None, newClientOrderId=None):
+        data = {}
+        data["symbol"] = symbol.upper()
+        data["side"] = side.upper()
+        data["type"] = type_.upper()
+        if timeInForce:
+            data["timeInForce"] = timeInForce.upper()
+        if quantity:
+            data["quantity"] = quantity
+        if quoteOrderQty:
+            data["quoteOrderQty"] = quoteOrderQty
+        if price:
+            data["price"] = price
+        if newClientOrderId:
+            data["newClientOrderId"] = newClientOrderId
+    
+        return self._request_api("post", "/api/v3/order", True, **{"data": data})    
+
+    def spot_cancel_order(self, symbol, orderId=None, origClientOrderId=None):
+        data = {}
+        data["symbol"] = symbol.upper()
+        if orderId:
+            data["orderId"] = orderId
+        elif origClientOrderId:
+            data["origClientOrderId"] = origClientOrderId
+    
+        return self._request_api("delete", "/api/v3/order", True, **{"data": data})  
+
     def spot_get_allorders(self, symbol='', orderId='', startTime='', endTime='', limit=1000):
         params = {}
         if symbol:
