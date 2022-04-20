@@ -153,8 +153,51 @@ class SpotAPI(Client):
     # 查询全仓杠杆交易对 
     def lever_get_all_pairs(self):
         params = {}
+        
         return self._request_api("get", "/sapi/v1/margin/allPairs", True, data=params)
     
+    # 杠杆账户下单
+    def lever_post_order(self, symbol, side, type_, isIsolated=False, timeInForce=None, quantity=None, quoteOrderQty=None, price=None, newClientOrderId=None):
+        data = {}
+        data["symbol"] = symbol.upper()
+        data["side"] = side.upper()
+        data["type"] = type_.upper()
+        if not isIsolated:
+            data["isIsolated"] = "FALSE"
+        else:
+            data["isIsolated"] = "TRUE"
+
+        if timeInForce:
+            data["timeInForce"] = timeInForce.upper()
+        if quantity:
+            data["quantity"] = quantity
+        if quoteOrderQty:
+            data["quoteOrderQty"] = quoteOrderQty
+        if price:
+            data["price"] = price
+        if newClientOrderId:
+            data["newClientOrderId"] = newClientOrderId
+        return self._request_api("post", "/sapi/v1/margin/order", True, **{"data": data})
+    
+    # 杠杆账户撤销订单
+
+    def lever_cancel_order(self, symbol, orderId=None, origClientOrderId=None, isIsolated=False):
+        data = {}
+        data["symbol"] = symbol.upper()
+
+        if not isIsolated:
+            data["isIsolated"] = "FALSE"
+        else:
+            data["isIsolated"] = "TRUE"
+
+        if orderId:
+            data["orderId"] = orderId
+        elif origClientOrderId:
+            data["origClientOrderId"] = origClientOrderId
+    
+        return self._request_api("delete", "/sapi/v1/margin/order", True, **{"data": data})  
+    
+
     # 查询全仓杠杆账户详情 weight 1
     def lever_get_account(self):
         params = {}

@@ -152,7 +152,7 @@ class asyncBinanceSpot(asyncRestClient):
         params = {}
         return self._request_params("get", "/api/v3/account", True, params, cb, callback_method=callback_method)    
     
-    ################### 现货账户和交易接口 ###################
+    
     def spot_post_order(self, 
         symbol, 
         side, 
@@ -202,6 +202,90 @@ class asyncBinanceSpot(asyncRestClient):
     
         return self._request_data("get", "/api/v3/order", True, data, cb, callback_method=callback_method)      
     
+    ################### 杠杆账户和交易接口 ###################
+    # 杠杆账户下单
+    def lever_post_order(self, symbol, side, type_, isIsolated=False, timeInForce=None, quantity=None, quoteOrderQty=None, price=None, newClientOrderId=None, cb=None, callback_method="sync"):
+        data = {}
+        data["symbol"] = symbol.upper()
+        data["side"] = side.upper()
+        data["type"] = type_.upper()
+        if not isIsolated:
+            data["isIsolated"] = "FALSE"
+        else:
+            data["isIsolated"] = "TRUE"
+
+        if timeInForce:
+            data["timeInForce"] = timeInForce.upper()
+        if quantity:
+            data["quantity"] = quantity
+        if quoteOrderQty:
+            data["quoteOrderQty"] = quoteOrderQty
+        if price:
+            data["price"] = price
+        if newClientOrderId:
+            data["newClientOrderId"] = newClientOrderId
+        return self._request_data("post", "/sapi/v1/margin/order", True, data, cb, callback_method=callback_method)
+    
+    # 杠杆账户撤销订单
+
+    def lever_cancel_order(self, symbol, orderId=None, origClientOrderId=None, isIsolated=False, cb=None, callback_method="sync"):
+        data = {}
+        data["symbol"] = symbol.upper()
+
+        if not isIsolated:
+            data["isIsolated"] = "FALSE"
+        else:
+            data["isIsolated"] = "TRUE"
+
+        if orderId:
+            data["orderId"] = orderId
+        elif origClientOrderId:
+            data["origClientOrderId"] = origClientOrderId
+    
+        return self._request_data("delete", "/sapi/v1/margin/order", True, data, cb, callback_method=callback_method)  
+    
+    def websocket_get_listenKey_spot(self, cb=None, callback_method="sync"):
+        return self._request_data("post", "/api/v3/userDataStream", False, data={}, cb=cb, callback_method=callback_method)
+    
+    def websocket_extend_listenKey_spot(self, listenKey, cb=None, callback_method="sync"):
+        data = {}
+        data['listenKey'] = listenKey
+        return self._request_data("put", "/api/v3/userDataStream", False, data=data, cb=cb, callback_method=callback_method)
+    
+    def websocket_delete_listenKey_spot(self, listenKey, cb=None, callback_method="sync"):
+        data = {}
+        data['listenKey'] = listenKey
+        return self._request_data("delete", "/api/v3/userDataStream", False, data=data, cb=cb, callback_method=callback_method)
+
+    def websocket_get_listenKey_lever(self, cb=None, callback_method="sync"):
+        return self._request_data("post", "/sapi/v1/userDataStream", False, data={}, cb=cb, callback_method=callback_method)
+    
+    def websocket_extend_listenKey_lever(self, listenKey, cb=None, callback_method="sync"):
+        data = {}
+        data['listenKey'] = listenKey
+        return self._request_data("put", "/sapi/v1/userDataStream", False, data=data, cb=cb, callback_method=callback_method)
+    
+    def websocket_delete_listenKey_lever(self, listenKey, cb=None, callback_method="sync"):
+        data = {}
+        data['listenKey'] = listenKey
+        return self._request_data("delete", "/sapi/v1/userDataStream", False, data=data, cb=cb, callback_method=callback_method)
+    
+    def websocket_get_listenKey_lever_isolated(self, symbol, cb=None, callback_method="sync"):
+        data = {}
+        data['symbol'] = symbol
+        return self._request_data("post", "/sapi/v1/userDataStream/isolated", False, data=data, cb=cb, callback_method=callback_method)
+    
+    def websocket_extend_listenKey_lever_isolated(self, symbol, listenKey, cb=None, callback_method="sync"):
+        data = {}
+        data['symbol'] = symbol
+        data['listenKey'] = listenKey
+        return self._request_data("put", "/sapi/v1/userDataStream/isolated", False, data=data, cb=cb, callback_method=callback_method)
+    
+    def websocket_delete_listenKey_lever_isolated(self, symbol, listenKey, cb=None, callback_method="sync"):
+        data = {}
+        data['symbol'] = symbol
+        data['listenKey'] = listenKey
+        return self._request_data("delete", "/sapi/v1/userDataStream/isolated", False, data=data, cb=cb, callback_method=callback_method)
 
     
 
