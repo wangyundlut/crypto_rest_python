@@ -8,10 +8,10 @@ import hmac
 class FtxOtcClient:
     _ENDPOINT = 'https://otc.ftx.com/api/'
 
-    def __init__(self) -> None:
+    def __init__(self, key='', secret='') -> None:
         self._session = Session()
-        self._api_key = '' # TODO: Place your API key here
-        self._api_secret = '' # TODO: Place your API secret here
+        self._api_key = key # TODO: Place your API key here
+        self._api_secret = secret # TODO: Place your API secret here
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return self._request('GET', path, params=params)
@@ -66,3 +66,17 @@ class FtxOtcClient:
 
     def get_balances(self):
         return self._get('balances')
+
+
+if __name__ == "__main__":
+    key = "ofjihG2b7dschhEJI4h4uTsZtI095ZElsPNWuRzX"
+    secret = "oVl2xHJxYba6WsRCxYMxwkm3negSkP8y8K327KLu"
+    ftx = FtxOtcClient(key, secret)
+    result = ftx.request_otc_quote(
+        base_currency="BTC",
+        quote_currency="USDT",
+        side="buy",
+        base_currency_size=10
+    )
+    print(result)
+

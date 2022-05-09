@@ -17,6 +17,7 @@ DELETE = "DELETE"
 
 ## AWS
 SPOT_REST_HOST: str = "https://api-aws.huobi.pro"
+OTC_REST: str = "https://api.huobi-brokerage.com"
 
 SPOT_WEBSOCKET_DATA_HOST: str = "wss://api-aws.huobi.pro/ws"
 SPOT_WEBSOCKET_TRADE_HOST: str = "wss://api-aws.huobi.pro/ws/v2"

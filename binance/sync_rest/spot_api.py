@@ -195,8 +195,18 @@ class SpotAPI(Client):
         elif origClientOrderId:
             data["origClientOrderId"] = origClientOrderId
     
-        return self._request_api("delete", "/sapi/v1/margin/order", True, **{"data": data})  
+        return self._request_api("delete", "/sapi/v1/margin/order", True, **{"data": data}) 
+
+    def lever_cancel_symbol_order(self, symbol, isIsolated=False):
+        data = {}
+        data["symbol"] = symbol.upper()
+
+        if not isIsolated:
+            data["isIsolated"] = "FALSE"
+        else:
+            data["isIsolated"] = "TRUE"
     
+        return self._request_api("delete", "/sapi/v1/margin/openOrders", True, **{"data": data})
 
     # 查询全仓杠杆账户详情 weight 1
     def lever_get_account(self):
@@ -286,6 +296,15 @@ class SpotAPI(Client):
     def lever_isolated_get_all_pairs(self):
         params = {}
         return self._request_api("get", "/sapi/v1/margin/isolated/allPairs", True, data=params)
+
+    def lever_get_order_limit(self, isIsolated=False, symbol=None):
+        params = {}
+        if isIsolated:
+            params["isIsolated"] = isIsolated
+        if symbol:
+            params["symbol"] = symbol
+        return self._request_api("get", "/sapi/v1/margin/rateLimit/order", True, data=params)
+
 
     ################### 币安宝接口 ###################
 

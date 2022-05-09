@@ -172,6 +172,9 @@ class okx_api_v5(Client):
         if ordType != 'market':
             params['px'] = str(px)
 
+        if px: 
+            params['px'] = str(px)
+
         return self._request_with_params(POST, '/api/v5/trade/order', params)
     
     def trade_post_batch_order_net(self, params=[]):

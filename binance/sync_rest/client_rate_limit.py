@@ -4,8 +4,8 @@ import hmac
 import requests
 import time
 from operator import itemgetter
-from .consts import *
-from .exceptions import BinanceAPIException, BinanceRequestException, BinanceWithdrawException
+
+
 
 
 class Client(object):
@@ -18,7 +18,7 @@ class Client(object):
         self._requests_params = requests_params
         self.response = None
         # 添加base_url
-        self.base_url = SPOT_URL
+        self.base_url = 'https://api.binance.com'
 
     def _init_session(self):
 
@@ -96,7 +96,7 @@ class Client(object):
 
         self.response = getattr(self.session, method)(uri, **kwargs)
         return self._handle_response()
-        
+
     def _request_api(self, method, path, signed=False, **kwargs):
         uri = self.base_url + path
         return self._request(method, uri, signed, **kwargs)
@@ -106,12 +106,16 @@ class Client(object):
         Raises the appropriate exceptions when necessary; otherwise, returns the
         response.
         """
-        if not str(self.response.status_code).startswith('2'):
-            return self.response.json()
-            raise BinanceAPIException(self.response)
-        try:
-            return self.response.json()
-        except ValueError:
-            return self.response.json()
-            raise BinanceRequestException('Invalid Response: %s' % self.response.text)
-    
+        return self.response
+
+if __name__ == "__main__":
+    key = 'wj4e957S1nlyLXch97J6u6cHYBncsmJ4pz7T4iB6n5HxC7aTbr8X4U0jUbNyZQjp'
+    secret = 'sdacA3hRZbKflJmDQNdvoqQQqXYenb08nOtRTxSHzge0HowsCR81nqupeHauWMfw' 
+    client = Client(key, secret)
+    result = client._request_api("get", "/sapi/v1/margin/rateLimit/order", True, data={})
+    print(result.json())
+
+    """
+    {'rateLimitType': 'ORDERS', 'interval': 'SECOND', 'intervalNum': 10, 'limit': 50, 'count': 0}
+    {'rateLimitType': 'ORDERS', 'interval': 'DAY', 'intervalNum': 1, 'limit': 160000, 'count': 15057}
+    """
