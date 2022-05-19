@@ -14,7 +14,8 @@ from asyncio import (
 )
 from json import loads
 
-from aiohttp import ClientSession, ClientResponse
+from aiohttp import ClientSession, ClientResponse, client_exceptions
+import aiohttp
 
 
 CALLBACK_TYPE = Callable[[dict, "Request"], None]
@@ -186,6 +187,7 @@ class asyncRestClient(object):
         """发送请求到服务器，并返回处理结果对象"""
 
         url = request.base_url + request.path
+        
         async with self.session.request(
             request.method,
             url,
@@ -200,6 +202,7 @@ class asyncRestClient(object):
 
             request.response = Response(status_code, text, header)
             return request.response
+        
         # cr: ClientResponse = await self.session.request(
         #     request.method,
         #     url,
@@ -225,7 +228,8 @@ class asyncRestClient(object):
                 request.callback(request)
             else:
                 await request.callback(request)
-            
+        except client_exceptions.ServerTimeoutError as timeout_error:
+            request.on_failed(0, request)
         except Exception:
             t, v, tb = sys.exc_info()
             # 设置了专用异常回调
@@ -236,7 +240,13 @@ class asyncRestClient(object):
                 self.on_error(t, v, tb, request)
 
 async def create_session(loop: AbstractEventLoop):
-    return ClientSession(loop=loop)
+    timeout = aiohttp.ClientTimeout(
+            total=330, # 全部请求最终完成时间
+            connect=2, # 从本机连接池里取出一个将要进行的请求的时间
+            sock_connect=15, # 单个请求连接到服务器的时间
+            sock_read=10 # 单个请求从服务器返回的时间
+        )
+    return ClientSession(loop=loop, timeout=timeout)
 
 def start_event_loop(loop: AbstractEventLoop) -> None:
     """启动事件循环"""
