@@ -11,12 +11,20 @@ import hmac, base64, hashlib
 import time
 import io
 import gzip
+import hmac
+import hashlib
+import time
+from operator import itemgetter
+from datetime import datetime, timedelta
+import asyncio
+from crypto_rest_python.async_rest_client import asyncRestClient, Request, Response
+from aiohttp import ClientSession, ClientResponse
 
 from pprint import pprint
 from typing import Dict, List
 
-from .consts import SPOT_REST_HOST, GET, POST, DELETE, EXCHANGE_NAME, COIN_FUTURES_HOST
-from .exception import huobiException, huobiRequestException
+from .consts import COIN_FUTURES_HOST, GET, POST, DELETE, EXCHANGE_NAME
+
 # for rest spot
 def create_signature(
     api_key: str,
@@ -35,7 +43,7 @@ def create_signature(
         ("AccessKeyId", api_key),
         ("SignatureMethod", "HmacSHA256"),
         ("SignatureVersion", "2"),
-        ("Timestamp", datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"))
+        ("Timestamp", datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"))
     ]
 
     if get_params:
@@ -131,9 +139,10 @@ CONST_ERROR_INFO = {
 }
 
 
-class Client(object):
+class asyncHuobiUSDTMargin(asyncRestClient):
 
-    def __init__(self, api_key, secret_key, host=SPOT_REST_HOST, exch="pro"):
+    def __init__(self, api_key, secret_key, host=COIN_FUTURES_HOST, exch="pro", loop: asyncio.AbstractEventLoop = None, session: ClientSession = None):
+        asyncRestClient.__init__(self, loop, session)
         self.__api_key = api_key
         self.__secret_key = secret_key
         self.__host = host
@@ -144,21 +153,29 @@ class Client(object):
     def _get_url(self, endpoint):
         return self.__host + endpoint
 
-    def _request(self, endpoint, method, params={}, auth=False):
+    def _get_header(self):
         headers = {
             "Accept": "application/json",
             "Content-type": "application/json",
             'User-agent': 'Mozilla 5.10',
         }
+        return headers
 
-        url_full = self._get_url(endpoint)
+    def test_cb(self, request):
+        print(f"{datetime.now()} ===== call back sync =====")
+        print(f"request: {request.base_url} {request.path} {request.params}")
+        print(f"{request.response.json()}")
+
+    def _request(self, endpoint, method, params={}, auth=False, cb=None, callback_method="sync"):
+        headers = self._get_header()
+
         ##########################################
         # 韩国站可以用pro的colo，需要额外加一个header
         if self._exch == "hbkr":
             headers.update({'CLOUD-EXCHANGE': '064B7FE487'})
         # 日本站的也可以用pro的colo，需要额外加一个header
         elif self._exch == "hbjp":
-            if hasattr(self, '_api_key') and self._api_key in ['2b33c3cf-65be6192-e6650ace-dab4c45e6f', 'b4925cbf-bg5t6ygr6y-c9baea24-d659b']:
+            if hasattr(self, '_api_key') and self.__api_key in ['2b33c3cf-65be6192-e6650ace-dab4c45e6f', 'b4925cbf-bg5t6ygr6y-c9baea24-d659b']:
                 headers.update({})
             else:
                 headers.update({'CLOUD-EXCHANGE': '368B24B8A4'})
@@ -166,6 +183,9 @@ class Client(object):
             headers.update({'CLOUD-EXCHANGE': 'sgex'})
         ##########################################
         ##########################################
+
+        if not cb:
+            cb = self.test_cb
 
         if auth:
             if method == GET:
@@ -178,7 +198,16 @@ class Client(object):
                     get_params=params
                 )
                 data = urllib.parse.urlencode(params_get)
-                response = requests.get(url_full, data, headers=headers, timeout=10)
+                self.request(
+                    method="get",
+                    base_url=self.__host,
+                    path=f"{endpoint}?{data}",
+                    callback_method=callback_method,
+                    callback=cb,
+                    params={},
+                    headers=headers,
+                    extra={}
+                )
             elif method == POST:
                 params_post = create_signature(
                     api_key=self.__api_key,
@@ -189,32 +218,108 @@ class Client(object):
                     get_params={}
                 )
                 data = json.dumps(params)
-                url_full = url_full + f"?{urllib.parse.urlencode(params_post)}"
                 
-                response = requests.post(url_full, data, headers=headers, timeout=10)
+                self.request(
+                    method="post",
+                    base_url=self.__host,
+                    path=f"{endpoint}?{urllib.parse.urlencode(params_post)}",
+                    callback_method=callback_method,
+                    callback=cb,
+                    data=data,
+                    headers=headers,
+                    extra={}
+                )
             elif method == DELETE:
-                response = requests.delete(url_full, data, headers=headers, timeout=10)
+                self.request(
+                    method="delete",
+                    base_url=self.__host,
+                    path=f"{endpoint}?{urllib.parse.urlencode(params_post)}",
+                    callback_method=callback_method,
+                    callback=cb,
+                    data=data,
+                    headers=headers,
+                    extra={}
+                )
             else:
                 raise Exception("method error " + str(method))
         else:
             data = urllib.parse.urlencode(params)
             if method == GET:
-                response = requests.get(url_full, data, headers=headers, timeout=10)
+                self.request(
+                    method="get",
+                    base_url=self.__host,
+                    path=f"{endpoint}?{data}",
+                    callback_method=callback_method,
+                    callback=cb,
+                    params={},
+                    headers=headers,
+                    extra={}
+                )
             elif method == POST:
-                response = requests.post(url_full, data, headers=headers, timeout=10)
+                self.request(
+                    method="post",
+                    base_url=self.__host,
+                    path=f"{endpoint}?{urllib.parse.urlencode(params_post)}",
+                    callback_method=callback_method,
+                    callback=cb,
+                    data=data,
+                    headers=headers,
+                    extra={}
+                )
             elif method == DELETE:
-                response = requests.delete(url_full, data, headers=headers, timeout=10)
+                self.request(
+                    method="delete",
+                    base_url=self.__host,
+                    path=f"{endpoint}?{urllib.parse.urlencode(params_post)}",
+                    callback_method=callback_method,
+                    callback=cb,
+                    data=data,
+                    headers=headers,
+                    extra={}
+                )
             else:
                 raise Exception("method error " + str(method))
         ##########################################
 
-        ##########################################
-        if not str(response.status_code).startswith('2'):
-            raise huobiException(response)
-        try:
-            return response.json()
-        except ValueError:
-            raise huobiRequestException('Invalid Response: %s' % response.text)
-            
-    
-    
+    # ===================
+    # Base Data Service
+    # ===================
+
+    # ===================
+    # Market Data Service
+    # ===================
+
+    # ====================
+    # Account Data Service
+    # ====================
+
+    # =============
+    # Trade Service
+    # =============
+    def trade_post_order(self, contract_code, price, volume, direction, order_price_type, client_order_id="", lever_rate=10, cb=None):
+        params = {}
+        params["contract_code"] = contract_code
+        params["price"] = price
+        params["volume"] = volume
+        params["direction"] = direction
+        params["order_price_type"] = order_price_type
+        if client_order_id:
+            params["client_order_id"] = client_order_id
+        params["lever_rate"] = lever_rate
+        return self._request("/linear-swap-api/v1/swap_cross_order", POST, params, auth=True, cb=cb)
+
+    def trade_post_cancel_order(self, contract_code, order_id="", client_order_id="", cb=None):
+        params = {}
+        params["contract_code"] = contract_code
+        if order_id:
+            params["order_id"] = order_id
+        elif client_order_id:
+            params["client_order_id"] = client_order_id
+        return self._request("/linear-swap-api/v1/swap_cross_cancel", POST, params, auth=True, cb=cb)
+
+
+
+
+
+
+

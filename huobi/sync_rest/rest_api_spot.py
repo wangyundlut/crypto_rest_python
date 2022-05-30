@@ -309,6 +309,25 @@ class huobiRestSpot(Client):
         params["type"] = str(type_)
         return self._request(f"/v1/futures/transfer", POST, params, auth=True)
 
+    def account_post_transfer_usdt_margin(self, from_, to, currency, amount, margin_account):
+        """
+        futures-to-pro
+        pro-to-futures
+        """
+        params = {}
+        params["from"] = str(from_)
+        params["to"] = str(to)
+        params["currency"] = str(currency)
+        params["amount"] = str(amount)
+        params["margin-account"] = str(margin_account)
+
+        return self._request(f"/v2/account/transfer", POST, params, auth=True)
+
+    def account_get_uid(self):
+        params = {}
+        return self._request(f"/v2/user/uid", GET, params, auth=True)
+
+
     # =============
     # Trade Service
     # =============

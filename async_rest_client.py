@@ -142,7 +142,6 @@ class asyncRestClient(object):
         )
     
         coro: coroutine = self._process_request(request)
-        # self.loop.call_soon_threadsafe()
         run_coroutine_threadsafe(coro, self.loop)
         return request
 
@@ -241,7 +240,7 @@ class asyncRestClient(object):
 
 async def create_session(loop: AbstractEventLoop):
     timeout = aiohttp.ClientTimeout(
-            total=330, # 全部请求最终完成时间
+            # total=330, # 全部请求最终完成时间
             connect=2, # 从本机连接池里取出一个将要进行的请求的时间
             sock_connect=15, # 单个请求连接到服务器的时间
             sock_read=10 # 单个请求从服务器返回的时间

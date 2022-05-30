@@ -154,9 +154,115 @@ class huobiRestUSDT(Client):
 
         return self._request("/linear-swap-api/v1/swap_contract_info", GET, params)
     
+    def market_get_bbo(self, contract_code="", business_type=""):
+        params = {}
+        if contract_code:
+            params["contract_code"] = contract_code
+        if business_type:
+            params["business_type"] = business_type
+        return self._request("/linear-swap-ex/market/bbo", GET, params)
+
+    def market_get_ticker(self, contract_code:str):
+        params = {}
+        params["contract_code"] = contract_code
+        return self._request("/linear-swap-ex/market/detail/merged", GET, params)
+
     # ====================
-    # Account Data Service
+    # Asset Data Service
     # ====================
+    def asset_balance_valuation(self, valuation_asset="USDT"):
+        params = {}
+        if valuation_asset:
+            params["valuation_asset"] = valuation_asset
+        return self._request("/linear-swap-api/v1/swap_balance_valuation", POST, params, auth=True)
+    
+    def asset_account(self, margin_account=""):
+        params = {}
+        if margin_account:
+            params["margin_account"] = margin_account
+        return self._request("/linear-swap-api/v1/swap_cross_account_info", POST, params, auth=True)
 
+    def asset_position(self, contract_code="", pair="", contract_type=""):
+        params = {}
+        if contract_code:
+            params["contract_code"] = contract_code
+        if pair:
+            params["pair"] = pair
+        if contract_type:
+            params["contract_type"] = contract_type
+        return self._request("/linear-swap-api/v1/swap_cross_position_info", POST, params, auth=True)
+        
+    def asset_fee(self):
+        params = {}
+        return self._request("/linear-swap-api/v1/swap_fee", POST, params, auth=True)
 
+    # ====================
+    # Trade Data Service
+    # ====================
+    def trade_switch_position_mode(self, position_mode: str, margin_account: str="USDT"):
+        # single_side, dual_side
+        params = {}
+        params["margin_account"] = margin_account
+        params["position_mode"] = position_mode
+        return self._request("/linear-swap-api/v1/swap_cross_switch_position_mode", POST, params, auth=True)
 
+    def trade_get_order_info(self, order_id: str=None, client_order_id:str=None, contract_code: str=None):
+        params = {}
+        if order_id:
+            params["order_id"] = order_id
+        elif client_order_id:
+            params["client_order_id"] = client_order_id
+        if contract_code:
+            params["contract_code"] = contract_code
+        return self._request("/linear-swap-api/v1/swap_cross_order_info", POST, params, auth=True)
+
+    def trade_post_order(self, contract_code, price, volume, direction, order_price_type, client_order_id="", lever_rate=10):
+        params = {}
+        params["contract_code"] = contract_code
+        params["price"] = price
+        params["volume"] = volume
+        params["direction"] = direction
+        params["order_price_type"] = order_price_type
+        if client_order_id:
+            params["client_order_id"] = client_order_id
+        params["lever_rate"] = lever_rate
+        return self._request("/linear-swap-api/v1/swap_cross_order", POST, params, auth=True)
+
+    def trade_post_cancel_order(self, contract_code, order_id="", client_order_id=""):
+        params = {}
+        params["contract_code"] = contract_code
+        if order_id:
+            params["order_id"] = order_id
+        elif client_order_id:
+            params["client_order_id"] = client_order_id
+        return self._request("/linear-swap-api/v1/swap_cross_cancel", POST, params, auth=True)
+
+    def trade_get_openorders(self, contract_code: str=""):
+        params = {}
+        if contract_code:
+            params["contract_code"] = contract_code
+        return self._request("/linear-swap-api/v1/swap_cross_openorders", POST, params, auth=True)
+
+    def trade_cancel_all(self, contract_code="", direction="", offset=""):
+        params = {}
+        if contract_code:
+            params["contract_code"] = contract_code
+        if direction:
+            params["direction"] = direction
+        if offset:
+            params["offset"] = offset
+        return self._request("/linear-swap-api/v1/swap_cross_cancelall", POST, params, auth=True)
+
+    def trade_fill_history(self, contract_code, trade_type="0", create_date=90, page_index=1, page_size=50):
+        # trade_type 0 for all, 17 for buy 18 for sell
+        # create_date 90 means 90days
+        # page_size 50, means one page 50 fills
+        params = {}
+        
+        params["contract_code"] = contract_code
+        params["trade_type"] = trade_type
+        params["create_date"] = create_date
+        params["page_index"] = page_index
+        params["page_size"] = page_size
+        return self._request("/linear-swap-api/v1/swap_cross_matchresults", POST, params, auth=True)
+    
