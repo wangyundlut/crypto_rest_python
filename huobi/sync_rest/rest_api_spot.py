@@ -326,6 +326,13 @@ class huobiRestSpot(Client):
     def account_get_uid(self):
         params = {}
         return self._request(f"/v2/user/uid", GET, params, auth=True)
+    
+    def account_get_history(self, account_id, transact_types="transfer"):
+        params = {}
+        params["account-id"] = account_id
+        params["transact-types"] = transact_types
+
+        return self._request(f"/v1/account/histor", GET, params, auth=True)
 
 
     # =============

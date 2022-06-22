@@ -89,7 +89,7 @@ class USDTAPI(Client):
         params = {}
         return self._request_api("get", "/fapi/v1/positionSide/dual", True, data=params)
 
-    def trade_post_order(self, symbol, side, type_, timeInForce="GTC", quantity=0, price=0):
+    def trade_post_order(self, symbol, side, type_, timeInForce="GTC", quantity=0, price=0, newClientOrderId=None, ):
         # timeInForce : GTC IOC FOK
         params = {}
         params['symbol'] = symbol
@@ -99,6 +99,8 @@ class USDTAPI(Client):
             params['timeInForce'] = timeInForce
             params['quantity'] = quantity
             params['price'] = price
+        if newClientOrderId:
+            params["newClientOrderId"] = newClientOrderId
         return self._request_api("post", "/fapi/v1/order", True, data=params)
 
     def trade_post_order_test(self, symbol, side, type_, timeInForce="GTC", quantity=0, price=0):
@@ -111,18 +113,26 @@ class USDTAPI(Client):
             params['timeInForce'] = timeInForce
             params['quantity'] = quantity
             params['price'] = price
+        elif type_ == "MARKET":
+            params['quantity'] = quantity
         return self._request_api("post", "/fapi/v1/order/test", True, data=params)
     
-    def trade_get_order_info(self, symbol, orderId):
+    def trade_get_order_info(self, symbol, orderId=None, origClientOrderId=None,):
         params = {}
         params['symbol'] = symbol
-        params['orderId'] = orderId
+        if orderId:
+            params["orderId"] = orderId
+        elif origClientOrderId:
+            params["origClientOrderId"] = origClientOrderId
         return self._request_api("get", "/fapi/v1/order", True, data=params)
 
-    def trade_cancel_order(self, symbol, orderId):
+    def trade_cancel_order(self, symbol, orderId=None, origClientOrderId=None,):
         params = {}
         params['symbol'] = symbol
-        params['orderId'] = orderId
+        if orderId:
+            params["orderId"] = orderId
+        elif origClientOrderId:
+            params["origClientOrderId"] = origClientOrderId
         return self._request_api("delete", "/fapi/v1/order", True, data=params)
     
     def trade_cancel_order_all(self, symbol):
